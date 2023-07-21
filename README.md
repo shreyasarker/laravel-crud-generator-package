@@ -17,6 +17,11 @@ With a single command, this package can generate:
     Laravel >= 8.0
     PHP >= 7.4
 
+# Installation
+
+```
+composer require shreyasarker/lara-crud
+```
 ## Command
 
 ```
