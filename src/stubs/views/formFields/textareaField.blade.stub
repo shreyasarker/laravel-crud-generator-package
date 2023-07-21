@@ -1,0 +1,9 @@
+<div class="row mb-12 p-3">
+    <label for="{{FIELD_NAME}}" class="col-sm-3 col-form-label">{{FIELD_LABEL}}</label>
+    <div class="col-sm-9">
+        <textarea class="form-control" name="{{FIELD_NAME}}" id="{{FIELD_NAME}}" rows="3">{{ old('{{FIELD_NAME}}', $data->{{FIELD_NAME}} ?? '') }}</textarea>
+    </div>
+    @error('{{FIELD_NAME}}')
+        <div class="alert alert-danger mt-1 mb-1">{{ $message }}</div>
+    @enderror
+</div>

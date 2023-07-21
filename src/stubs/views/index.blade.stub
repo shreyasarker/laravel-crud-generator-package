@@ -1,0 +1,46 @@
+@extends('{{DIRECTORY_NAME}}.layouts.app')
+
+@section('content')
+
+    <div class="container shadow bg-light mt-3 p-3 " >
+        <div class="row">
+            <div class="row margin-tb">
+                <div class="col-sm-9">
+                    <h3>{{HEADING}} List</h3>
+                </div>
+                <div class="col-sm-3">
+                    <a class="btn btn-primary" href="{{ route('{{ROUTE}}.create') }}"> Add {{HEADING}} Details</a>
+                </div>
+            </div>
+        </div>
+        </div>
+
+    <table class="table table-bordered table-hover">
+        <tr>
+            <th>#</th>
+{{TABLE_HEADER}}
+            <th width="230px">Actions</th>
+        </tr>
+        @foreach ($data as $value)
+        <tr>
+            <td>{{ $value->id }}</td>
+{{TABLE_BODY}}
+            <td class="shadow">
+                <form action="{{ route('{{ROUTE}}.destroy',$value->id) }}" method="POST">
+
+                    <a class="btn btn-success btn-sm" href="{{ route('{{ROUTE}}.show',$value->id) }}"><i class="fa-solid fa-eye"></i>View</a>
+                    <a class="btn btn-primary btn-sm" href="{{ route('{{ROUTE}}.edit',$value->id) }}"><i class="fa-solid fa-pen-to-square"></i>Edit</a>
+
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash-can"></i>Delete</button>
+
+                </form>
+            </td>
+        </tr>
+        @endforeach
+    </table>
+
+
+    {!! $data->links() !!}
+@endsection

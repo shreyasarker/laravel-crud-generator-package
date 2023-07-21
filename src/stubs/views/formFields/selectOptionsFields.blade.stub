@@ -1,0 +1,12 @@
+<div class="row mb-12 p-3">
+    <label for="{{FIELD_NAME}}" class="col-sm-3 col-form-label">{{FIELD_LABEL}}</label>
+    <div class="col-sm-9">
+        <select class="form-select" name="{{FIELD_NAME}}" id="{{FIELD_NAME}}" aria-label="Default select example">
+            <option value="">Select from here</option>
+{{OPTIONS}}
+          </select>
+    </div>
+    @error('{{FIELD_NAME}}')
+        <div class="alert alert-danger mt-1 mb-1">{{ $message }}</div>
+    @enderror
+</div>

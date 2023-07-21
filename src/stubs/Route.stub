@@ -1,0 +1,6 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+
+Route::resource('_URL_', App\Http\Controllers\_CONTROLLER_NAME_Controller::class, []);
