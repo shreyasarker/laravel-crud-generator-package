@@ -1,0 +1,22 @@
+@extends('{{DIRECTORY_NAME}}.layouts.app')
+
+@section('title', 'Create {{HEADING}}')
+
+@section('content')
+    <form action="{{ route('{{ROUTE}}.store') }}" method="POST" class="space-y-6">
+        @csrf
+
+        @include('{{DIRECTORY_NAME}}._form')
+
+        <div class="flex items-center gap-3">
+            <button type="submit"
+                    class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                Save
+            </button>
+            <a href="{{ route('{{ROUTE}}.index') }}"
+               class="text-sm font-medium text-slate-700 hover:underline">
+                Cancel
+            </a>
+        </div>
+    </form>
+@endsection

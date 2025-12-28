@@ -1,0 +1,21 @@
+@extends('{{DIRECTORY_NAME}}.layouts.app')
+
+@section('title', 'View {{HEADING}}')
+
+@section('content')
+    <div class="space-y-4">
+{{FIELDS_WITH_DATA}}
+    </div>
+
+    <div class="mt-8 flex items-center gap-3">
+        <a href="{{ route('{{ROUTE}}.edit', ${{FIELD_VARIABLE}}->id ?? ${{DIRECTORY_NAME}}->id) }}"
+           class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+            Edit
+        </a>
+
+        <a href="{{ route('{{ROUTE}}.index') }}"
+           class="text-sm font-medium text-slate-700 hover:underline">
+            Back
+        </a>
+    </div>
+@endsection

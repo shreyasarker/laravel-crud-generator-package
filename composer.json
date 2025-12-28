@@ -1,0 +1,45 @@
+{
+    "name": "shreyasarker/lara-crud",
+    "description": "A simple CRUD generator package.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "illuminate/console": "^10.0|^11.0|^12.0",
+        "illuminate/filesystem": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0"
+    },
+    "require-dev": {
+        "mockery/mockery": "^1.6",
+        "orchestra/testbench": "^8.0|^9.0|^10.0",
+        "phpunit/phpunit": "^10.5|^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ShreyaSarker\\LaraCrud\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ShreyaSarker\\LaraCrud\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Shreya Sarker",
+            "email": "shreya@codeboid.com"
+        }
+    ],
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ShreyaSarker\\LaraCrud\\CrudServiceProvider"
+            ]
+        }
+    }
+}

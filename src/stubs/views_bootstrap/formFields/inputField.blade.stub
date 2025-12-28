@@ -1,0 +1,12 @@
+<div class="mb-3">
+    <label class="form-label">{{FIELD_LABEL}}</label>
+    <input
+        type="{{FIELD_TYPE}}"
+        name="{{FIELD_NAME}}"
+        value="{{ old('{{FIELD_NAME}}', ${{FIELD_VARIABLE}}->{{FIELD_NAME}} ?? '') }}"
+        class="form-control @error('{{FIELD_NAME}}') is-invalid @enderror">
+
+    @error('{{FIELD_NAME}}')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>

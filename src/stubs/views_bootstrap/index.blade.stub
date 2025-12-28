@@ -1,0 +1,72 @@
+@extends('{{DIRECTORY_NAME}}.layouts.app')
+
+@section('content')
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="mb-0">{{HEADING}} List</h3>
+
+        <a href="{{ route('{{ROUTE}}.create') }}" class="btn btn-primary">
+            Create
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 70px;">#</th>
+{{TABLE_HEADER}}
+                            <th style="width: 240px;">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse ($data as $value)
+                            <tr>
+                                <td>{{ $value->id }}</td>
+{{TABLE_BODY}}
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a class="btn btn-outline-success btn-sm"
+                                        href="{{ route('{{ROUTE}}.show', $value->id) }}">
+                                            <i class="fa-solid fa-eye me-1"></i> View
+                                        </a>
+
+                                        <a class="btn btn-outline-primary btn-sm"
+                                        href="{{ route('{{ROUTE}}.edit', $value->id) }}">
+                                            <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+                                        </a>
+
+                                        <form action="{{ route('{{ROUTE}}.destroy', $value->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Are you sure?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="fa-solid fa-trash me-1"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="100" class="text-center text-muted py-4">
+                                    No {{HEADING}} found.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        {!! $data->links() !!}
+    </div>
+</div>
+@endsection

@@ -1,0 +1,62 @@
+@extends('{{DIRECTORY_NAME}}.layouts.app')
+
+@section('title', '{{HEADING}}')
+
+@section('content')
+    <div class="flex items-center justify-between mb-6">
+        <p class="text-sm text-slate-600">Manage {{HEADING}} items.</p>
+        <a href="{{ route('{{ROUTE}}.create') }}"
+           class="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+            + Create
+        </a>
+    </div>
+
+    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+{{TABLE_HEADER}}
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white">
+                @foreach(${{DIRECTORY_NAME}} as $value)
+                    <tr class="hover:bg-slate-50">
+{{TABLE_BODY}}
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex gap-2">
+                                <a href="{{ route('{{ROUTE}}.show', $value->id) }}"
+                                   class="text-sm font-medium text-slate-900 hover:underline">View</a>
+
+                                <a href="{{ route('{{ROUTE}}.edit', $value->id) }}"
+                                   class="text-sm font-medium text-slate-900 hover:underline">Edit</a>
+
+                                <form action="{{ route('{{ROUTE}}.destroy', $value->id) }}" method="POST"
+                                      onsubmit="return confirm('Are you sure?')" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="text-sm font-medium text-red-600 hover:underline">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+
+                @if(count(${{DIRECTORY_NAME}}) === 0)
+                    <tr>
+                        <td colspan="100" class="px-4 py-8 text-center text-sm text-slate-500">
+                            No {{HEADING}} found.
+                        </td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-6">
+        {{ ${{DIRECTORY_NAME}}->links() }}
+    </div>
+@endsection

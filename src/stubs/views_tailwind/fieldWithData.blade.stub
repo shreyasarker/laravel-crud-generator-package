@@ -1,0 +1,6 @@
+<div class="border border-slate-200 rounded-lg p-4">
+    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{FIELD_LABEL}}</div>
+    <div class="mt-1 text-sm text-slate-900">
+        {{ ${{FIELD_VARIABLE}}->{{FIELD_NAME}} }}
+    </div>
+</div>

@@ -1,0 +1,31 @@
+@extends('{{DIRECTORY_NAME}}.layouts.app')
+
+@section('content')
+
+    <div class="container shadow-none bg-light mt-3" style="width: 50rem;">
+        <div class="row card p-5 text-center">
+            <div class="row margin-tb">
+                <div class="col-sm-11">
+                    <h2>Create {{HEADING}}</h2>
+                </div>
+                <div class="col-sm-1">
+                    <a class="btn btn-primary" href="{{ route('{{ROUTE}}.index') }}"><i class="fa-solid fa-house"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form action="{{ route('{{ROUTE}}.store') }}" method="POST">
+        @csrf
+        <div class="container card shadow-lg p-3 mb-5" style="width: 50rem;">
+            @include('{{DIRECTORY_NAME}}._form')
+            
+            <div class="row card text-center">
+                <div class="col-sm-12 p-3">
+                  <button type="submit" class="btn btn-primary btn-lg shadow-lg">Save</button>
+                </div>
+              </div>
+        </div>
+    </form>
+
+@endsection

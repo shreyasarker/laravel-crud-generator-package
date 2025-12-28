@@ -1,0 +1,11 @@
+<div>
+    <label class="block text-sm font-medium text-slate-700 mb-1">{{FIELD_LABEL}}</label>
+    <input type="{{FIELD_TYPE}}"
+           name="{{FIELD_NAME}}"
+           value="{{ old('{{FIELD_NAME}}', ${{FIELD_VARIABLE}}->{{FIELD_NAME}} ?? '') }}"
+           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20" />
+
+    @error('{{FIELD_NAME}}')
+        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+    @enderror
+</div>
