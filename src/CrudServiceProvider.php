@@ -9,6 +9,7 @@ class CrudServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        
         if ($this->app->runningInConsole()) {
             $this->commands([
                 MakeCrudCommand::class,

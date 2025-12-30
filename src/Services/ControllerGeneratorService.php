@@ -20,6 +20,7 @@ class ControllerGeneratorService
     {
         $force  = (bool) ($options['force'] ?? false);
         $dryRun = (bool) ($options['dry_run'] ?? false);
+        $api    = (bool) ($options['api'] ?? false);
 
         $naming = NameUtil::getNamingConvention($name);
 
@@ -39,15 +40,18 @@ class ControllerGeneratorService
         }
 
         $contents = $this->getStubContents(
-            $this->getStubVariables($namespace, $className, $fieldVariable, $viewsDirectoryName, $route)
+            $this->getStubVariables($namespace, $className, $fieldVariable, $viewsDirectoryName, $route),
+            $api
         );
 
         if ($contents === null) {
-            return "Error: Controller stub not found/readable at " . PathUtil::getControllerStubPath();
+            $stubType = $api ? 'API' : 'web';
+            return "Error: Controller stub not found/readable at " . PathUtil::getControllerStubPath($api);
         }
 
         if ($dryRun) {
-            return "Dry run: would write controller to " . $path;
+            $controllerType = $api ? 'API controller' : 'web controller';
+            return "Dry run: would write {$controllerType} to " . $path;
         }
 
         if (! $this->files->exists($dir)) {
@@ -56,17 +60,18 @@ class ControllerGeneratorService
 
         $this->files->put($path, $contents);
 
+        $controllerType = $api ? 'API controller' : 'Controller';
         return $existedBefore
-            ? "Controller overwritten successfully: " . basename($path)
-            : "Controller created successfully: " . basename($path);
+            ? "{$controllerType} overwritten successfully: " . basename($path)
+            : "{$controllerType} created successfully: " . basename($path);
     }
 
     /**
      * @param  array<string, string>  $stubVariables
      */
-    private function getStubContents(array $stubVariables = []): ?string
+    private function getStubContents(array $stubVariables = [], bool $api = false): ?string
     {
-        $stub = PathUtil::getControllerStubPath();
+        $stub = PathUtil::getControllerStubPath($api);
         $contents = @file_get_contents($stub);
 
         if ($contents === false) {
@@ -93,8 +98,8 @@ class ControllerGeneratorService
         return [
             'NAMESPACE' => $namespace,
             'CLASS_NAME' => $className,
-            'Model_CLASS_NAMESPACE' => PathUtil::getModelNamespace(),
-            'REQUEST_CLASS_NAMESPACE' => PathUtil::getRequestNamespace(),
+            'MODEL_NAMESPACE' => PathUtil::getModelNamespace(),
+            'REQUEST_NAMESPACE' => PathUtil::getRequestNamespace(),
             'FIELD_VARIABLE' => $fieldVariable,
             'VIEWS_DIRECTORY' => $viewsDirectoryName,
             'ROUTE' => $route,

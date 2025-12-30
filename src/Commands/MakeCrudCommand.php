@@ -28,7 +28,7 @@ class MakeCrudCommand extends Command
         {--api : API-style generation (skips views by default)}
         {--stack=bootstrap : View stack: bootstrap|tailwind}
         {--force : Overwrite existing files}
-        {--dry-run : Show plan only, don’t write files}';
+        {--dry-run : Show plan only, don\'t write files}';
 
     protected $description = 'Create CRUD operations with a single command';
 
@@ -64,6 +64,10 @@ class MakeCrudCommand extends Command
         $name = (string) $this->argument('name');
 
         $parts = $this->resolvePartsToGenerate();
+
+        if ($parts === Command::FAILURE) {
+            return Command::FAILURE;
+        }
 
         $options = [
             'force' => (bool) $this->option('force'),
@@ -124,9 +128,9 @@ class MakeCrudCommand extends Command
         $this->callHandlers($name, $fields, $parts, $options);
 
         if ($options['dry_run']) {
-            $this->comment('Dry run complete ✅ (no files were written)');
+            $this->comment('Dry run complete (no files were written)');
         } else {
-            $this->info('Done ✅');
+            $this->info('Done!');
         }
 
         return Command::SUCCESS;
@@ -135,42 +139,45 @@ class MakeCrudCommand extends Command
     /**
      * @return array<int, string>
      */
-    private function resolvePartsToGenerate(): array
+    private function resolvePartsToGenerate(): array|int
     {
-        $only = trim((string) ($this->option('only') ?? ''));
-        $skip = trim((string) ($this->option('skip') ?? ''));
+        $only = $this->option('only');
+        $skip = $this->option('skip');
 
-        $parts = self::PARTS;
+        $allParts = ['model', 'migration', 'controller', 'request', 'views', 'routes'];
 
-        if ($only !== '') {
-            $requested = $this->csvToList($only);
-            $invalid = array_values(array_diff($requested, self::PARTS));
-            if ($invalid) {
-                $this->error('Invalid --only value(s): ' . implode(', ', $invalid));
-                $this->line('Allowed: ' . implode(', ', self::PARTS));
-                exit(Command::FAILURE);
+        if ($only && $skip) {
+            $this->error('You cannot use both --only and --skip options.');
+            return Command::FAILURE;
+        }
+
+        if ($only) {
+            $parts = array_map('trim', explode(',', $only));
+            $invalid = array_diff($parts, $allParts);
+
+            if (! empty($invalid)) {
+                $this->error('Invalid --only option(s): ' . implode(', ', $invalid));
+                return Command::FAILURE;
             }
-            $parts = $requested;
+
+            return $parts;
         }
 
-        if ($skip !== '') {
-            $toSkip = $this->csvToList($skip);
-            $invalid = array_values(array_diff($toSkip, self::PARTS));
-            if ($invalid) {
-                $this->error('Invalid --skip value(s): ' . implode(', ', $invalid));
-                $this->line('Allowed: ' . implode(', ', self::PARTS));
-                exit(Command::FAILURE);
+        if ($skip) {
+            $partsToSkip = array_map('trim', explode(',', $skip));
+            $invalid = array_diff($partsToSkip, $allParts);
+
+            if (! empty($invalid)) {
+                $this->error('Invalid --skip option(s): ' . implode(', ', $invalid));
+                return Command::FAILURE;
             }
-            $parts = array_values(array_diff($parts, $toSkip));
+
+            return array_values(array_diff($allParts, $partsToSkip));
         }
 
-        if (count($parts) === 0) {
-            $this->error('Nothing to generate. Your --only/--skip removed all parts.');
-            exit(Command::FAILURE);
-        }
-
-        return $parts;
+        return $allParts;
     }
+
 
     /**
      * @param  array<int, array<string, mixed>>  $fields
@@ -182,7 +189,7 @@ class MakeCrudCommand extends Command
         foreach ($parts as $part) {
             match ($part) {
                 'migration' => $this->info($this->migrationGeneratorService->generate($name, $fields, $options)),
-                'model' => $this->info($this->modelGeneratorService->generate($name, $options)),
+                'model' => $this->info($this->modelGeneratorService->generate($name, $fields, $options)),
                 'request' => $this->info($this->requestGeneratorService->generate($name, $fields, $options)),
                 'controller' => $this->info($this->controllerGeneratorService->generate($name, $options)),
                 'views' => $this->info($this->viewsGeneratorService->generate($name, $fields, $options)),
@@ -201,7 +208,7 @@ class MakeCrudCommand extends Command
      */
     private function interactiveFields(): array
     {
-        $this->info('Interactive mode: let’s build your fields step-by-step.');
+        $this->info('Interactive mode: let\'s build your fields step-by-step.');
 
         $validationMap = TypeUtil::getValidationType();
         $sqlMap = TypeUtil::getSqlColumnType();

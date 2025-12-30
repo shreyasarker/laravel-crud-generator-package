@@ -4,89 +4,121 @@ namespace ShreyaSarker\LaraCrud\Utils;
 
 class PathUtil
 {
-    public static function getStubPath(): string
+    /* =========================
+     |  Base paths
+     ========================= */
+
+    public static function appPath(): string
     {
-        return dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'stubs';
+        return app_path();
     }
 
-    public static function getBasePath(string $directory): string
+    public static function routesPath(): string
     {
-        return base_path($directory);
+        return base_path('routes');
     }
 
-    /* MODEL PATH */
-    public static function getModelNamespace(): string
+    public static function viewsPath(): string
     {
-        return 'App\Models';
+        return resource_path('views');
+    }
+
+    public static function migrationsPath(): string
+    {
+        return database_path('migrations');
+    }
+
+    /* =========================
+     |  Generator base paths (FIXED)
+     ========================= */
+
+    public static function getMigrationBasePath(): string
+    {
+        return database_path('migrations');
     }
 
     public static function getModelBasePath(): string
     {
-        return self::getBasePath('app') . DIRECTORY_SEPARATOR . 'Models';
-    }
-
-    public static function getModelStubPath(): string
-    {
-        return self::getStubPath() . DIRECTORY_SEPARATOR . 'Model.stub';
-    }
-
-    /* REQUEST PATH */
-    public static function getRequestNamespace(): string
-    {
-        return 'App\Http\Requests';
+        return app_path();
     }
 
     public static function getRequestBasePath(): string
     {
-        return self::getBasePath('app\\Http') . DIRECTORY_SEPARATOR . 'Requests';
+        return app_path('Http/Requests');
     }
 
-    public static function getRequestStubPath(): string
+    public static function getControllerBasePath(): string
     {
-        return self::getStubPath() . DIRECTORY_SEPARATOR . 'Request.stub';
+        return app_path('Http/Controllers');
     }
 
-    /* CONTROLLER PATH */
+    public static function getViewsBasePath(): string
+    {
+        return resource_path('views');
+    }
+
+    /* =========================
+     |  Namespaces
+     ========================= */
+
+    public static function getModelNamespace(): string
+    {
+        return 'App';
+    }
+
     public static function getControllerNamespace(): string
     {
         return 'App\Http\Controllers';
     }
 
-    public static function getControllerBasePath(): string
+    public static function getRequestNamespace(): string
     {
-        return self::getBasePath('app\\Http') . DIRECTORY_SEPARATOR . 'Controllers';
+        return 'App\Http\Requests';
     }
 
-    public static function getControllerStubPath(): string
-    {
-        return self::getStubPath() . DIRECTORY_SEPARATOR . 'Controller.stub';
-    }
+    /* =========================
+     |  Stub paths
+     ========================= */
 
-    /* VIEW PATH */
-    public static function getViewsBasePath(): string
+    public static function stubsBasePath(): string
     {
-        return self::getBasePath('') . DIRECTORY_SEPARATOR . 'resources' . DIRECTORY_SEPARATOR . 'views';
-    }
-
-    public static function getViewsStubPathByStack(string $stack = 'bootstrap'): string
-    {
-        $base = self::getStubPath() . DIRECTORY_SEPARATOR;
-
-        return match ($stack) {
-            'tailwind' => $base . 'views_tailwind',
-            'bootstrap' => $base . 'views_bootstrap',
-            default => $base . 'views_bootstrap',
-        };
-    }
-
-    /* MIGRATION PATH */
-    public static function getMigrationBasePath(): string
-    {
-        return self::getBasePath('') . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'migrations';
+        return __DIR__ . '/../stubs';
     }
 
     public static function getMigrationStubPath(): string
     {
-        return self::getStubPath() . DIRECTORY_SEPARATOR . 'Migration.stub';
+        return self::stubsBasePath() . '/migration.stub';
+    }
+
+    public static function getModelStubPath(): string
+    {
+        return self::stubsBasePath() . '/model.stub';
+    }
+
+    public static function getRequestStubPath(): string
+    {
+        return self::stubsBasePath() . '/request.stub';
+    }
+
+    public static function getControllerStubPath(bool $api = false): string
+    {
+        return $api
+            ? self::stubsBasePath() . '/controller.api.stub'
+            : self::stubsBasePath() . '/controller.stub';
+    }
+
+    /**
+     * Return the views stub directory based on stack
+     *
+     * @param string $stack bootstrap|tailwind
+     */
+    public static function getViewsStubPathByStack(string $stack = 'bootstrap'): string
+    {
+        $stack = strtolower($stack);
+
+        return match ($stack) {
+            'tailwind' => self::stubsBasePath() . '/views_tailwind',
+            default => self::stubsBasePath() . '/views_bootstrap',
+        };
     }
 }

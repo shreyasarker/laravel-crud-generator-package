@@ -18,6 +18,10 @@ class ViewsGeneratorService
     private string $fieldVariable = '';
     private string $route = '';
 
+    // FIXED: Added missing properties
+    private bool $force = false;
+    private bool $dryRun = false;
+
     public function __construct(private Filesystem $files)
     {
         $this->formFieldType = TypeUtil::getFieldType();
@@ -33,8 +37,9 @@ class ViewsGeneratorService
             return 'Skipped views (API mode enabled)';
         }
 
-        $force  = (bool) ($options['force'] ?? false);
-        $dryRun = (bool) ($options['dry_run'] ?? false);
+        // FIXED: Store force and dryRun as instance properties
+        $this->force  = (bool) ($options['force'] ?? false);
+        $this->dryRun = (bool) ($options['dry_run'] ?? false);
         $stack  = (string) ($options['stack'] ?? 'bootstrap');
 
         $allowedStacks = ['bootstrap', 'tailwind'];
@@ -53,15 +58,15 @@ class ViewsGeneratorService
 
         $baseDir = PathUtil::getViewsBasePath() . DIRECTORY_SEPARATOR . $this->viewsDirectoryName;
 
-        if ($this->files->exists($baseDir) && !$force) {
+        if ($this->files->exists($baseDir) && !$this->force) {
             return "Skipped views: directory '{$this->viewsDirectoryName}' already exists. Use --force to overwrite.";
         }
 
-        if ($dryRun) {
+        if ($this->dryRun) {
             return "Dry run: would generate views in {$baseDir} using stack '{$stack}'.";
         }
 
-        if ($this->files->exists($baseDir) && $force) {
+        if ($this->files->exists($baseDir) && $this->force) {
             $this->files->deleteDirectory($baseDir);
         }
 
@@ -83,7 +88,7 @@ class ViewsGeneratorService
     {
         $this->writeStub(
             'layouts/app.blade.stub',
-            'layouts/app.blade',
+            'layouts/app.blade.php',
             []
         );
     }
@@ -100,7 +105,7 @@ class ViewsGeneratorService
 
         $this->writeStub(
             'index.blade.stub',
-            'index.blade',
+            'index.blade.php',
             [
                 'HEADING' => $this->heading,
                 'ROUTE' => $this->route,
@@ -120,7 +125,7 @@ class ViewsGeneratorService
 
         $this->writeStub(
             'show.blade.stub',
-            'show.blade',
+            'show.blade.php',
             [
                 'HEADING' => $this->heading,
                 'ROUTE' => $this->route,
@@ -143,6 +148,10 @@ class ViewsGeneratorService
             . DIRECTORY_SEPARATOR
             . '_form.blade.php';
 
+        if ($this->dryRun) {
+            return;
+        }
+
         $this->files->put($path, $html);
     }
 
@@ -150,7 +159,7 @@ class ViewsGeneratorService
     {
         $this->writeStub(
             'create.blade.stub',
-            'create.blade',
+            'create.blade.php',
             [
                 'HEADING' => $this->heading,
                 'ROUTE' => $this->route,
@@ -163,7 +172,7 @@ class ViewsGeneratorService
     {
         $this->writeStub(
             'edit.blade.stub',
-            'edit.blade',
+            'edit.blade.php',
             [
                 'HEADING' => $this->heading,
                 'ROUTE' => $this->route,
@@ -175,36 +184,70 @@ class ViewsGeneratorService
 
     /* ----------------------- Helpers ----------------------- */
 
-    private function writeStub(string $stub, string $target, array $vars): void
+    // FIXED: Corrected method to write stub files
+    private function writeStub(string $stubName, string $fileName, array $replacements): void
     {
-        $stubPath = $this->stubBasePath . DIRECTORY_SEPARATOR . $stub;
+        $contents = $this->loadStub($stubName, $replacements);
 
-        $targetPath = PathUtil::getViewsBasePath()
+        if ($contents === null) {
+            return;
+        }
+
+        $path = PathUtil::getViewsBasePath()
             . DIRECTORY_SEPARATOR
             . $this->viewsDirectoryName
             . DIRECTORY_SEPARATOR
-            . $target;
+            . $fileName;
 
-        $this->files->makeDirectory(dirname($targetPath), 0755, true);
-
-        $contents = file_get_contents($stubPath);
-
-        foreach ($vars as $k => $v) {
-            $contents = str_replace('{{' . $k . '}}', $v, $contents);
+        if ($this->files->exists($path) && !$this->force) {
+            return;
         }
 
-        $this->files->put($targetPath, $contents);
+        if ($this->dryRun) {
+            return;
+        }
+
+        $dir = dirname($path);
+        if (!$this->files->exists($dir)) {
+            $this->files->makeDirectory($dir, 0755, true);
+        }
+
+        $this->files->put($path, $contents);
+    }
+
+    // FIXED: Separated stub loading logic
+    private function loadStub(string $stubName, array $replacements = []): ?string
+    {
+        $path = $this->stubBasePath . DIRECTORY_SEPARATOR . $stubName;
+
+        if (!file_exists($path)) {
+            return null;
+        }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            return null;
+        }
+
+        foreach ($replacements as $key => $value) {
+            $contents = str_replace('{{ ' . $key . ' }}', $value, $contents);
+        }
+
+        return $contents;
     }
 
     private function makeFieldsWithDataView(array $item): string
     {
         $name = NameUtil::getNamingConvention($item['name']);
 
-        return $this->getStub('fieldWithData.blade.stub', [
+        $content = $this->loadStub('fieldWithData.blade.stub', [
             'FIELD_NAME' => $name['singular_lower'],
             'FIELD_LABEL' => $name['label_upper'],
             'FIELD_VARIABLE' => $this->fieldVariable,
         ]);
+
+        return $content ?? '';
     }
 
     private function createField(array $item): string
@@ -235,24 +278,14 @@ class ViewsGeneratorService
             }
         }
 
-        return $this->getStub("formFields/{$stubName}.blade.stub", [
+        $content = $this->loadStub("formFields/{$stubName}.blade.stub", [
             'FIELD_NAME' => $name['singular_lower'],
             'FIELD_LABEL' => $name['label_upper'],
             'FIELD_TYPE' => $this->formFieldType[$item['type']] ?? 'text',
             'FIELD_VARIABLE' => $this->fieldVariable,
             'OPTIONS' => $optionsMarkup,
         ]);
-    }
 
-    private function getStub(string $stub, array $vars): string
-    {
-        $path = $this->stubBasePath . DIRECTORY_SEPARATOR . $stub;
-        $contents = file_get_contents($path);
-
-        foreach ($vars as $k => $v) {
-            $contents = str_replace('{{' . $k . '}}', $v, $contents);
-        }
-
-        return $contents;
+        return $content ?? '';
     }
 }

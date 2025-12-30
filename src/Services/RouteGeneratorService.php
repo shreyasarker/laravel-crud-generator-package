@@ -4,6 +4,7 @@ namespace ShreyaSarker\LaraCrud\Services;
 
 use Illuminate\Filesystem\Filesystem;
 use ShreyaSarker\LaraCrud\Utils\NameUtil;
+use ShreyaSarker\LaraCrud\Utils\PathUtil;
 
 class RouteGeneratorService
 {
@@ -25,6 +26,11 @@ class RouteGeneratorService
         $routePath       = $naming['table_name'];
         $controllerClass = $naming['singular_upper'] . 'Controller';
 
+        // Validate route path
+        if (empty($routePath)) {
+            return "Error: Invalid route path generated from name '{$name}'";
+        }
+
         $routesDir           = base_path('routes');
         $generatedRoutesFile = $routesDir . DIRECTORY_SEPARATOR . 'lara-crud.php';
 
@@ -34,7 +40,8 @@ class RouteGeneratorService
 
         $includeLine = "require_once __DIR__ . '/lara-crud.php';";
 
-        $namespace = 'App\\Http\\Controllers';
+        // Use PathUtil for consistent namespace
+        $namespace = PathUtil::getControllerNamespace();
         $routeLine = $api
             ? "Route::apiResource('{$routePath}', \\{$namespace}\\{$controllerClass}::class);"
             : "Route::resource('{$routePath}', \\{$namespace}\\{$controllerClass}::class);";
@@ -90,7 +97,7 @@ class RouteGeneratorService
             $this->files->append($generatedRoutesFile, $routeLine . "\n");
         }
 
-        // 2) Ensure include exists in web.php/api.php once
+        // 2) Ensure include exists in web.php/api.php
         $this->ensureIncludeLine($targetRoutesFile, $includeLine);
 
         return "Routes updated successfully (" . ($api ? 'api' : 'web') . ")";
@@ -98,17 +105,21 @@ class RouteGeneratorService
 
     private function ensureIncludeLine(string $targetRoutesFile, string $includeLine): void
     {
+        // Check if target route file exists (web.php or api.php)
         if (! $this->files->exists($targetRoutesFile)) {
-            $this->files->put($targetRoutesFile, "<?php\n\n" . $includeLine . "\n");
+            // Don't create main route files - they should exist in Laravel
+            // Silently skip - lara-crud.php will still work if manually included
             return;
         }
 
         $contents = $this->files->get($targetRoutesFile);
 
+        // Check if include line already exists
         if (str_contains($contents, $includeLine)) {
             return;
         }
 
+        // Add include line at the end
         $this->files->append($targetRoutesFile, "\n" . $includeLine . "\n");
     }
 

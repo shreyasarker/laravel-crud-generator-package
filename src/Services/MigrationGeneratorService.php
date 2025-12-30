@@ -28,7 +28,6 @@ class MigrationGeneratorService
         $naming = NameUtil::getNamingConvention($name);
         $tableName = $naming['table_name'];
 
-        $className = 'Create' . $naming['plural_upper'] . 'Table';
         $migrationBaseName = 'create_' . $tableName . '_table';
 
         $migrationDir = PathUtil::getMigrationBasePath();
@@ -45,7 +44,7 @@ class MigrationGeneratorService
             : $migrationDir . DIRECTORY_SEPARATOR . FileUtil::getFileName(now()->format('Y_m_d_His') . '_' . $migrationBaseName);
 
         $contents = $this->getStubContents(
-            $this->getStubVariables($className, $tableName, $sqlColumns)
+            $this->getStubVariables($tableName, $sqlColumns)
         );
 
         if ($contents === null) {
@@ -74,12 +73,16 @@ class MigrationGeneratorService
         foreach ($fields as $field) {
             $sqlColumn = trim((string) ($field['sqlColumn'] ?? ''));
             $name = trim((string) ($field['name'] ?? ''));
+            $validations = trim((string) ($field['validations'] ?? ''));
 
             if ($sqlColumn === '' || $name === '') {
                 continue;
             }
 
-            $columns .= str_repeat("\t", 3) . "\$table->{$sqlColumn}('{$name}');\n";
+            // Add ->nullable() if field has nullable validation
+            $nullable = str_contains($validations, 'nullable') ? '->nullable()' : '';
+
+            $columns .= str_repeat("\t", 3) . "\$table->{$sqlColumn}('{$name}'){$nullable};\n";
         }
 
         return FileUtil::cleanLastLineBreak($columns);
@@ -101,10 +104,9 @@ class MigrationGeneratorService
         return $contents;
     }
 
-    private function getStubVariables(string $className, string $tableName, string $sqlColumns): array
+    private function getStubVariables(string $tableName, string $sqlColumns): array
     {
         return [
-            'CLASS_NAME' => $className,
             'TABLE_NAME' => $tableName,
             'SQL_COLUMNS' => $sqlColumns,
         ];

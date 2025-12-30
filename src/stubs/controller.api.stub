@@ -1,0 +1,68 @@
+<?php
+
+namespace {{NAMESPACE}};
+
+use {{MODEL_NAMESPACE}}\{{CLASS_NAME}};
+use {{REQUEST_NAMESPACE}}\{{CLASS_NAME}}Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class {{CLASS_NAME}}Controller extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): JsonResponse
+    {
+        ${{FIELD_VARIABLE}}s = {{CLASS_NAME}}::latest()->paginate(15);
+
+        return response()->json(${{FIELD_VARIABLE}}s);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store({{CLASS_NAME}}Request $request): JsonResponse
+    {
+        ${{FIELD_VARIABLE}} = {{CLASS_NAME}}::create($request->validated());
+
+        return response()->json([
+            'message' => '{{CLASS_NAME}} created successfully.',
+            'data' => ${{FIELD_VARIABLE}}
+        ], 201);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show({{CLASS_NAME}} ${{FIELD_VARIABLE}}): JsonResponse
+    {
+        return response()->json(${{FIELD_VARIABLE}});
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update({{CLASS_NAME}}Request $request, {{CLASS_NAME}} ${{FIELD_VARIABLE}}): JsonResponse
+    {
+        ${{FIELD_VARIABLE}}->update($request->validated());
+
+        return response()->json([
+            'message' => '{{CLASS_NAME}} updated successfully.',
+            'data' => ${{FIELD_VARIABLE}}
+        ]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy({{CLASS_NAME}} ${{FIELD_VARIABLE}}): JsonResponse
+    {
+        ${{FIELD_VARIABLE}}->delete();
+
+        return response()->json([
+            'message' => '{{CLASS_NAME}} deleted successfully.'
+        ]);
+    }
+}

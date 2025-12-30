@@ -1,155 +1,143 @@
 <?php
-/*
+
 namespace ShreyaSarker\LaraCrud\Tests\Feature;
 
 use ShreyaSarker\LaraCrud\Tests\TestCase;
 
 class MakeCrudCommandTest extends TestCase
 {
-    public function test_it_requires_interactive_flag(): void
+    /** @test */
+    public function it_requires_interactive_flag(): void
     {
         $this->artisan('make:crud', ['name' => 'Post'])
-            ->expectsOutputToContain('Please use --interactive')
+            ->expectsOutput('Please use --interactive to define fields.')
             ->assertExitCode(1);
     }
 
-    public function test_routes_dry_run_does_not_write_anything(): void
+    /** @test */
+    public function it_shows_error_for_both_only_and_skip(): void
     {
-        $routesFile = base_path('routes/lara-crud.php');
-
-        $this->assertFileDoesNotExist($routesFile);
-
         $this->artisan('make:crud', [
             'name' => 'Post',
             '--interactive' => true,
-            '--only' => 'routes',
+            '--only' => 'model',
+            '--skip' => 'views',
+        ])->expectsOutput('You cannot use both --only and --skip options.')
+            ->assertExitCode(1);
+    }
+
+    /** @test */
+    public function it_validates_only_option(): void
+    {
+        $this->artisan('make:crud', [
+            'name' => 'Post',
+            '--interactive' => true,
+            '--only' => 'invalid,another',
+        ])->expectsOutput('Invalid --only option(s): invalid, another')
+            ->assertExitCode(1);
+    }
+
+    /** @test */
+    public function it_validates_skip_option(): void
+    {
+        $this->artisan('make:crud', [
+            'name' => 'Post',
+            '--interactive' => true,
+            '--skip' => 'invalid',
+        ])->expectsOutput('Invalid --skip option(s): invalid')
+            ->assertExitCode(1);
+    }
+
+    /** @test */
+    public function it_handles_dry_run_with_empty_fields(): void
+    {
+        $this->artisan('make:crud', [
+            'name' => 'Post',
+            '--interactive' => true,
             '--dry-run' => true,
         ])
-            ->expectsQuestion('Field name (leave empty to finish)', '')
-            ->expectsOutputToContain('Plan:')
-            ->expectsOutputToContain('Dry run: yes')
-            ->expectsOutputToContain('Dry run: would add route for')
-            ->assertExitCode(0);
-
-        $this->assertFileDoesNotExist($routesFile);
-
-        $web = file_get_contents(base_path('routes/web.php'));
-        $this->assertStringNotContainsString('lara-crud.php', $web);
+        ->expectsQuestion('Field name (leave empty to finish)', '') // Empty = no fields
+        ->expectsOutput('Dry run complete (no files were written)')
+        ->assertExitCode(0);
     }
 
-    public function test_it_generates_web_routes_and_includes_file(): void
+    /** @test */
+    public function it_supports_api_mode(): void
     {
-        $this->assertRoutesDirWritable();
-
         $this->artisan('make:crud', [
             'name' => 'Post',
             '--interactive' => true,
-            '--only' => 'routes',
-        ])
-            ->expectsQuestion('Field name (leave empty to finish)', '')
-            ->expectsConfirmation('Proceed to generate files?', true)
-            ->assertExitCode(0);
-
-        $this->assertFileExistsWithDebug(base_path('routes/lara-crud.php'));
-        $this->assertFileExists(base_path('routes/web.php'));
-
-        $generated = file_get_contents(base_path('routes/lara-crud.php'));
-        $this->assertStringContainsString("use Illuminate\\Support\\Facades\\Route;", $generated);
-        $this->assertStringContainsString("Route::resource('posts'", $generated);
-
-        $web = file_get_contents(base_path('routes/web.php'));
-        $this->assertStringContainsString("require_once __DIR__ . '/lara-crud.php';", $web);
-    }
-
-    public function test_it_generates_api_routes_when_api_flag_is_used(): void
-    {
-        $this->assertRoutesDirWritable();
-
-        $this->artisan('make:crud', [
-            'name' => 'Post',
-            '--interactive' => true,
-            '--only' => 'routes',
             '--api' => true,
-        ])
-            ->expectsQuestion('Field name (leave empty to finish)', '')
-            ->expectsConfirmation('Proceed to generate files?', true)
-            ->assertExitCode(0);
-
-        $this->assertFileExistsWithDebug(base_path('routes/lara-crud.php'));
-        $this->assertFileExists(base_path('routes/api.php'));
-
-        $generated = file_get_contents(base_path('routes/lara-crud.php'));
-        $this->assertStringContainsString("Route::apiResource('posts'", $generated);
-
-        $api = file_get_contents(base_path('routes/api.php'));
-        $this->assertStringContainsString("require_once __DIR__ . '/lara-crud.php';", $api);
-    }
-
-    public function test_routes_second_run_does_not_duplicate_route_line(): void
-    {
-        $this->assertRoutesDirWritable();
-
-        $this->artisan('make:crud', [
-            'name' => 'Post',
-            '--interactive' => true,
-            '--only' => 'routes',
-        ])
-            ->expectsQuestion('Field name (leave empty to finish)', '')
-            ->expectsConfirmation('Proceed to generate files?', true)
-            ->assertExitCode(0);
-
-        $this->assertFileExistsWithDebug(base_path('routes/lara-crud.php'));
-
-        $this->artisan('make:crud', [
-            'name' => 'Post',
-            '--interactive' => true,
-            '--only' => 'routes',
-        ])
-            ->expectsQuestion('Field name (leave empty to finish)', '')
-            ->expectsConfirmation('Proceed to generate files?', true)
-            ->assertExitCode(0);
-
-        $generated = file_get_contents(base_path('routes/lara-crud.php'));
-        $count = substr_count($generated, "Route::resource('posts'");
-        $this->assertSame(1, $count);
-    }
-
-    public function test_views_dry_run_does_not_write_views_directory(): void
-    {
-        $viewsDir = base_path('resources/views/posts');
-
-        $this->artisan('make:crud', [
-            'name' => 'Post',
-            '--interactive' => true,
-            '--only' => 'views',
             '--dry-run' => true,
-            '--stack' => 'bootstrap',
         ])
-            ->expectsQuestion('Field name (leave empty to finish)', '')
-            ->expectsOutputToContain('Dry run: yes')
-            ->assertExitCode(0);
-
-        $this->assertDirectoryDoesNotExist($viewsDir);
+        ->expectsQuestion('Field name (leave empty to finish)', '')
+        ->expectsOutput('Dry run complete (no files were written)')
+        ->assertExitCode(0);
     }
 
-    private function assertRoutesDirWritable(): void
+    /** @test */
+    public function it_supports_force_flag(): void
     {
-        $routesDir = base_path('routes');
-
-        $this->assertDirectoryExists($routesDir, 'routes/ directory missing at: ' . $routesDir);
-        $this->assertTrue(is_writable($routesDir), 'routes/ directory is not writable: ' . $routesDir);
+        $this->artisan('make:crud', [
+            'name' => 'Post',
+            '--interactive' => true,
+            '--force' => true,
+            '--dry-run' => true,
+        ])
+        ->expectsQuestion('Field name (leave empty to finish)', '')
+        ->expectsOutput('Dry run complete (no files were written)')
+        ->assertExitCode(0);
     }
 
-    private function assertFileExistsWithDebug(string $path): void
+    /** @test */
+    public function it_supports_stack_option(): void
     {
-        if (file_exists($path)) {
-            $this->assertTrue(true);
-            return;
-        }
+        $this->artisan('make:crud', [
+            'name' => 'Post',
+            '--interactive' => true,
+            '--stack' => 'tailwind',
+            '--dry-run' => true,
+        ])
+        ->expectsQuestion('Field name (leave empty to finish)', '')
+        ->expectsOutput('Dry run complete (no files were written)')
+        ->assertExitCode(0);
+    }
 
-        $routesDir = base_path('routes');
-        $files = is_dir($routesDir) ? implode(', ', array_diff(scandir($routesDir) ?: [], ['.', '..'])) : '(routes dir missing)';
-        $this->fail("Expected file not found: {$path}\nbase_path(): " . base_path() . "\nroutes dir: {$routesDir}\nroutes contents: {$files}");
+    /** @test */
+    public function it_allows_generation_to_be_canceled(): void
+    {
+        $this->artisan('make:crud', [
+            'name' => 'Post',
+            '--interactive' => true,
+        ])
+        ->expectsQuestion('Field name (leave empty to finish)', '')
+        ->expectsConfirmation('Proceed to generate files?', false) // Cancel
+        ->expectsOutput('No changes made. Generation canceled.')
+        ->assertExitCode(0);
+    }
+
+    /** @test */
+    public function it_shows_plan_before_generation(): void
+    {
+        $this->artisan('make:crud', [
+            'name' => 'Post',
+            '--interactive' => true,
+            '--dry-run' => true,
+        ])
+        ->expectsQuestion('Field name (leave empty to finish)', '')
+        ->expectsOutputToContain('Plan:')
+        ->expectsOutputToContain('Resource: Post')
+        ->assertExitCode(0);
+    }
+
+    /** @test */
+    public function command_is_registered(): void
+    {
+        $commands = array_keys($this->app->make('Illuminate\Contracts\Console\Kernel')->all());
+        
+        $this->assertTrue(
+            in_array('make:crud', $commands),
+            'The make:crud command is not registered'
+        );
     }
 }
-*/

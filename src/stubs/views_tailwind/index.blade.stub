@@ -1,4 +1,4 @@
-@extends('{{DIRECTORY_NAME}}.layouts.app')
+@extends('layouts.app')
 
 @section('title', '{{HEADING}}')
 
